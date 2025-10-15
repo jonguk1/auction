@@ -29,27 +29,27 @@ public class UserService {
 
     // 회원가입
     public boolean registerUser(UserRegisterDto userRegisterDto) {
-        // 🔍 이메일 중복 체크
+        // 이메일 중복 체크
         if (userRepository.existsByEmail(userRegisterDto.getEmail())) {
             return false; // Email already exists
         }
 
-        // 🔍 사용자명 중복 체크
+        // 사용자명 중복 체크
         if (userRepository.existsByUsername(userRegisterDto.getUsername())) {
             return false; // Username already exists
         }
 
-        // 💡 DTO의 변환 메서드 활용
+        // DTO의 변환 메서드 활용
         User user = userRegisterDto.toEntity();
 
-        // 🔐 비밀번호 암호화 (DTO 변환 후 덮어쓰기)
+        // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(userRegisterDto.getPassword());
         user.setPassword(encodedPassword);
 
-        // 💾 사용자 저장
+        // 사용자 저장
         userRepository.save(user);
 
-        // 👨‍💼 기본 프로필 생성 (선택사항)
+        // 기본 프로필 생성
         UserProfile userProfile = new UserProfile();
         userProfile.setUser(user);
         userProfileRepository.save(userProfile);
