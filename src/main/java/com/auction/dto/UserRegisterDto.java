@@ -1,5 +1,7 @@
 package com.auction.dto;
 
+import java.sql.Date;
+
 import com.auction.entity.User;
 
 public class UserRegisterDto {
@@ -80,6 +82,11 @@ public class UserRegisterDto {
         user.setPassword(this.password);
         user.setUsername(this.username);
         user.setPhoneNumber(this.phoneNumber);
+
+        // birthDate 변환 (String → java.sql.Date)
+        if (this.birthDate != null && !this.birthDate.isEmpty()) {
+            user.setBirthDate(Date.valueOf(this.birthDate)); // "yyyy-MM-dd" 형식
+        }
 
         // Gender 설정
         if (this.gender != null) {

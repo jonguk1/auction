@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface UserRatingRepository extends JpaRepository<UserRating, Long> {
 
     // 사용자가 받은 평점들 조회
-    List<UserRating> findByRatedUser(User ratedUser);
+    List<UserRating> findByRatedUser(User user);
 
     // 사용자의 평균 평점 계산
     @Query("SELECT AVG(ur.rating) FROM UserRating ur WHERE ur.ratedUser.id = :userId")
