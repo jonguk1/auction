@@ -1,5 +1,6 @@
 package com.auction.controller;
 
+import com.auction.dto.JwtTokenDto;
 import com.auction.dto.UserLoginDto;
 import com.auction.dto.UserRegisterDto;
 import com.auction.dto.UserResponseDto;
@@ -29,9 +30,9 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginDto loginDto) {
-        UserResponseDto userResponse = userService.login(loginDto);
-        return ResponseEntity.ok(userResponse);
+    public ResponseEntity<JwtTokenDto> login(@RequestBody UserLoginDto loginDto) {
+        JwtTokenDto tokenDto = userService.login(loginDto);
+        return ResponseEntity.ok(tokenDto);
     }
 
     // 사용자 ID로 조회

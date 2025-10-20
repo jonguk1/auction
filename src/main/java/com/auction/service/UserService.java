@@ -1,5 +1,7 @@
 package com.auction.service;
 
+import com.auction.config.JwtTokenProvider;
+import com.auction.dto.JwtTokenDto;
 import com.auction.dto.UserLoginDto;
 import com.auction.dto.UserRegisterDto;
 import com.auction.dto.UserResponseDto;
@@ -22,15 +24,18 @@ public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserRatingRepository userRatingRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public UserService(UserRepository userRepository,
             UserProfileRepository userProfileRepository,
             UserRatingRepository userRatingRepository,
-            BCryptPasswordEncoder passwordEncoder) {
+            BCryptPasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userRatingRepository = userRatingRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     // 회원가입
@@ -46,6 +51,11 @@ public class UserService {
         User user = dto.toEntity();
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
+        // 기본 역할 설정 (BUYER)
+        if (user.getUserRole() == null) {
+            user.setUserRole(User.UserRole.BUYER);
+        }
+
         userRepository.save(user);
 
         UserProfile userProfile = new UserProfile();
@@ -54,7 +64,7 @@ public class UserService {
     }
 
     // 로그인
-    public UserResponseDto login(UserLoginDto dto) {
+    public JwtTokenDto login(UserLoginDto dto) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new AuthenticationFailedException("아이디 또는 비밀번호가 잘못되었습니다."));
 
@@ -65,7 +75,16 @@ public class UserService {
         user.updateLastLoginAt();
         userRepository.save(user);
 
-        return UserResponseDto.fromEntity(user);
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
+
+        return new JwtTokenDto(
+                "Bearer",
+                accessToken,
+                refreshToken,
+                60 * 60L // 1시간 (초 단위)
+        );
     }
 
     // 사용자 ID로 조회

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경매 시스템</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HammerTime</h1>
+            <p>실시간 온라인 경매 플랫폼</p>
+            
+            <div class="user-info" id="userInfo">
+                <p>환영합니다, <strong id="userName"></strong>님!</p>
+                <button class="btn" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="message" class="message"></div>
+
+            <div class="tab-buttons" id="guestTabs">
+                <button class="tab-btn active" onclick="showTab('login')">로그인</button>
+                <button class="tab-btn" onclick="showTab('register')">회원가입</button>
+            </div>
+
+            <div class="tab-buttons" id="userTabs" style="display: none;">
+                <button class="tab-btn active" onclick="showTab('auctions')">경매 목록</button>
+                <button class="tab-btn" onclick="showTab('createAuction')">경매 등록</button>
+                <button class="tab-btn" onclick="showTab('myAuctions')">내 경매</button>
+                <button class="tab-btn" onclick="showTab('myBids')">내 입찰</button>
+            </div>
+
+            <!-- 로그인 -->
+            <div id="login" class="tab-content active">
+                <h2>로그인</h2>
+                <form onsubmit="login(event)">
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="loginEmail" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">로그인</button>
+                </form>
+            </div>
+
+            <!-- 회원가입 -->
+            <div id="register" class="tab-content">
+                <h2>회원가입</h2>
+                <form onsubmit="register(event)">
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" id="regUsername" placeholder="홍길동" required>
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="regEmail" placeholder="example@email.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" required>
+                    </div>
+                    <div class="form-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="regPhone" placeholder="010-1234-5678" required>
+                    </div>
+                    <div class="form-group">
+                        <label>생년월일</label>
+                        <input type="date" id="regBirthDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>성별</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="gender" value="MALE" required>
+                                남성
+                            </label>
+                            <label>
+                                <input type="radio" name="gender" value="FEMALE" required>
+                                여성
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">가입하기</button>
+                </form>
+            </div>
+
+            <!-- 경매 목록 -->
+            <div id="auctions" class="tab-content">
+                <h2>진행중인 경매</h2>
+                <button class="btn" onclick="loadAuctions()">새로고침</button>
+                <div id="auctionList" class="auction-grid"></div>
+            </div>
+
+            <!-- 경매 등록 -->
+            <div id="createAuction" class="tab-content">
+                <h2>경매 상품 등록</h2>
+                <form onsubmit="createAuction(event)">
+                    <div class="form-group">
+                        <label>상품명</label>
+                        <input type="text" id="auctionTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>상품 설명</label>
+                        <textarea id="auctionDescription" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>시작가 (원)</label>
+                        <input type="number" id="auctionStartPrice" min="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>시작 시간</label>
+                        <input type="datetime-local" id="auctionStartTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>종료 시간</label>
+                        <input type="datetime-local" id="auctionEndTime" required>
+                    </div>
+                    <button type="submit" class="btn">등록하기</button>
+                </form>
+            </div>
+
+            <!-- 내 경매 -->
+            <div id="myAuctions" class="tab-content">
+                <h2>내가 등록한 경매</h2>
+                <button class="btn" onclick="loadMyAuctions()">새로고침</button>
+                <div id="myAuctionList" class="auction-grid"></div>
+            </div>
+
+            <!-- 내 입찰 -->
+            <div id="myBids" class="tab-content">
+                <h2>내 입찰 내역</h2>
+                <button class="btn" onclick="loadMyBids()">새로고침</button>
+                <div id="myBidList" class="bid-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 입찰 모달 -->
+    <div id="bidModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>입찰하기</h2>
+                <button class="close-btn" onclick="closeBidModal()">&times;</button>
+            </div>
+            <div id="modalAuctionInfo"></div>
+            <form id="bidForm" onsubmit="placeBid(event)">
+                <input type="hidden" id="bidAuctionId">
+                <div class="form-group">
+                    <label>입찰 금액 (원)</label>
+                    <input type="number" id="bidAmount" min="0" required>
+                </div>
+                <button type="submit" class="btn">입찰하기</button>
+            </form>
+            <div id="bidHistory" class="bid-list"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript 파일들 -->
+    <script src="/js/app.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/auction.js"></script>
+    <script src="/js/bid.js"></script>
+</body>
+</html>
