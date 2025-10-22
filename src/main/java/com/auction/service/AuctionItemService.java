@@ -13,6 +13,7 @@ import com.auction.dto.AuctionItemUpdateDto;
 import com.auction.entity.AuctionItem;
 import com.auction.entity.AuctionItem.AuctionStatus;
 import com.auction.entity.User;
+import com.auction.exception.AuctionNotFoundException;
 import com.auction.exception.UserNotFoundException;
 import com.auction.repository.AuctionItemRepository;
 import com.auction.repository.UserRepository;
@@ -102,7 +103,7 @@ public class AuctionItemService {
     public AuctionItemDto getAuctionItem(Long itemId) {
         return auctionItemRepository.findById(itemId)
                 .map(AuctionItemDto::fromEntity)
-                .orElseThrow(() -> new IllegalArgumentException("경매 상품을 찾을 수 없습니다."));
+                .orElseThrow(() -> new AuctionNotFoundException("경매 상품을 찾을 수 없습니다: " + itemId));
     }
 
     // 모든 경매 상품 조회
@@ -129,7 +130,7 @@ public class AuctionItemService {
     @Transactional
     public AuctionItemDto updateAuctionItem(Long id, AuctionItemUpdateDto dto) {
         AuctionItem auctionItem = auctionItemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("경매 상품을 찾을 수 없습니다."));
+                .orElseThrow(() -> new AuctionNotFoundException("경매 상품을 찾을 수 없습니다: " + id));
 
         // 입찰이 있으면 수정 불가 (선택적 검증)
         if (!auctionItem.getBids().isEmpty()) {
@@ -154,7 +155,7 @@ public class AuctionItemService {
     @Transactional
     public void deleteAuctionItem(Long id) {
         AuctionItem auctionItem = auctionItemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("경매 상품을 찾을 수 없습니다."));
+                .orElseThrow(() -> new AuctionNotFoundException("경매 상품을 찾을 수 없습니다: " + id));
 
         // 입찰이 있으면 삭제 불가
         if (!auctionItem.getBids().isEmpty()) {

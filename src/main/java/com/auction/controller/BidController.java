@@ -1,11 +1,13 @@
 package com.auction.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auction.dto.BidCreateDto;
 import com.auction.dto.BidDto;
+import com.auction.dto.CustomUserDetails;
 import com.auction.service.BidService;
 
 import java.util.List;
@@ -29,9 +31,9 @@ public class BidController {
     // 입찰하기
     @PostMapping
     public ResponseEntity<BidDto> createBid(
-            @RequestParam Long userId,
+            @AuthenticationPrincipal CustomUserDetails currentUser,
             @RequestBody BidCreateDto dto) {
-        BidDto createdBid = bidService.placeBid(userId, dto);
+        BidDto createdBid = bidService.placeBid(currentUser.getId(), dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBid);
     }
 
@@ -52,8 +54,9 @@ public class BidController {
 
     // 내 입찰 내역 조회
     @GetMapping("/my")
-    public ResponseEntity<List<BidDto>> getMyBids(@RequestParam Long userId) {
-        List<BidDto> myBids = bidService.getMyBids(userId);
+    public ResponseEntity<List<BidDto>> getMyBids(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        List<BidDto> myBids = bidService.getMyBids(currentUser.getId());
         return ResponseEntity.ok(myBids);
     }
 

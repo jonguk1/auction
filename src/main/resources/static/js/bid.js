@@ -21,7 +21,7 @@ async function loadMyBids() {
     container.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
 
     try {
-        const response = await fetch(`${API_BASE}/bids/my?userId=${currentUser.id}`, {
+        const response = await fetch(`${API_BASE}/bids/my`, {
             headers: { 
                 'Authorization': `Bearer ${accessToken}`
             }
@@ -140,7 +140,7 @@ async function placeBid(e) {
     };
 
     try {
-        const response = await fetch(`${API_BASE}/bids?userId=${currentUser.id}`, {
+        const response = await fetch(`${API_BASE}/bids`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

@@ -6,15 +6,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.auction.dto.CustomUserDetails;
 import com.auction.entity.User;
 import com.auction.repository.UserRepository;
 
 import java.io.IOException;
-import java.util.Collections;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -44,15 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .orElse(null);
 
                 if (user != null) {
-                    // UserRole을 Spring Security 권한으로 변환
-                    String role = "ROLE_" + user.getUserRole().name(); // ROLE_BUYER, ROLE_SELLER, ROLE_ADMIN
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+                    // User Entity를 CustomUserDetails로 변환
+                    CustomUserDetails userDetails = CustomUserDetails.from(user);
 
-                    // 인증 객체 생성
+                    // 인증 객체 생성 (principal에 CustomUserDetails 설정)
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            email,
+                            userDetails, // principal에 CustomUserDetails 사용
                             null,
-                            Collections.singletonList(authority));
+                            userDetails.getAuthorities());
 
                     // SecurityContext에 인증 정보 설정
                     SecurityContextHolder.getContext().setAuthentication(authentication);

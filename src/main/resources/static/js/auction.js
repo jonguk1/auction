@@ -61,7 +61,7 @@ async function createAuction(e) {
     };
 
     try {
-        const response = await fetch(`${API_BASE}/items/create?sellerId=${currentUser.id}`, {
+        const response = await fetch(`${API_BASE}/items`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ async function loadMyAuctions() {
     container.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
 
     try {
-        const response = await fetch(`${API_BASE}/items/my?userId=${currentUser.id}`, {
+        const response = await fetch(`${API_BASE}/items/my`, {
             headers: { 
                 'Authorization': `Bearer ${accessToken}`
             }
