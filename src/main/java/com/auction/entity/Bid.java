@@ -39,7 +39,9 @@ public class Bid {
         ACTIVE, // 유효한 입찰
         OUTBID, // 다른 사람이 더 높은 가격으로 입찰함
         WINNING, // 현재 최고가 입찰
+        LOSING, // 경쟁 중 (다른 사람이 더 높은 가격에 입찰)
         WON, // 낙찰됨
+        LOST, // 낙찰 실패
         CANCELLED // 취소됨
     }
 

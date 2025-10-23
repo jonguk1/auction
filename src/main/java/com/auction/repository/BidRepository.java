@@ -41,4 +41,7 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     // 경매 상품 ID로 입찰 내역 조회
     @Query("SELECT b FROM Bid b WHERE b.auctionItem.id = :auctionItemId ORDER BY b.bidAmount DESC")
     List<Bid> findByAuctionItemId(@Param("auctionItemId") Long auctionItemId);
+
+    // 경매 상품 ID로 입찰 내역 조회 (금액 내림차순) - 스케줄러용
+    List<Bid> findByAuctionItemIdOrderByBidAmountDesc(Long auctionItemId);
 }

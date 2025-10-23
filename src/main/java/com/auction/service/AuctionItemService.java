@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,22 +14,29 @@ import com.auction.dto.AuctionItemDto;
 import com.auction.dto.AuctionItemUpdateDto;
 import com.auction.entity.AuctionItem;
 import com.auction.entity.AuctionItem.AuctionStatus;
+import com.auction.entity.Bid;
 import com.auction.entity.User;
 import com.auction.exception.AuctionNotFoundException;
 import com.auction.exception.UserNotFoundException;
 import com.auction.repository.AuctionItemRepository;
+import com.auction.repository.BidRepository;
 import com.auction.repository.UserRepository;
 
 @Service
 @Transactional(readOnly = true)
 public class AuctionItemService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuctionItemService.class);
+
     private final AuctionItemRepository auctionItemRepository;
     private final UserRepository userRepository;
+    private final BidRepository bidRepository;
 
-    public AuctionItemService(AuctionItemRepository auctionItemRepository, UserRepository userRepository) {
+    public AuctionItemService(AuctionItemRepository auctionItemRepository, UserRepository userRepository,
+            BidRepository bidRepository) {
         this.auctionItemRepository = auctionItemRepository;
         this.userRepository = userRepository;
+        this.bidRepository = bidRepository;
     }
 
     // 유효성 검증 메서드
@@ -170,6 +179,61 @@ public class AuctionItemService {
         return items.stream()
                 .map(AuctionItemDto::fromEntity)
                 .toList();
+    }
+
+    /**
+     * 만료된 경매를 자동으로 마감하고 낙찰 처리
+     * 스케줄러에서 주기적으로 호출됩니다.
+     */
+    @Transactional
+    public void closeExpiredAuctions() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 만료된 경매 조회
+        List<AuctionItem> expiredAuctions = auctionItemRepository.findByStatusAndEndTimeBefore(
+                AuctionStatus.ACTIVE, now);
+
+        if (expiredAuctions.isEmpty()) {
+            logger.debug("만료된 경매가 없습니다.");
+            return;
+        }
+
+        logger.info("만료된 경매 {}건을 처리합니다.", expiredAuctions.size());
+
+        for (AuctionItem auction : expiredAuctions) {
+            try {
+                // 경매 상태를 CLOSED로 변경
+                auction.setStatus(AuctionStatus.CLOSED);
+
+                // 입찰 내역 조회
+                List<Bid> bids = bidRepository.findByAuctionItemIdOrderByBidAmountDesc(auction.getId());
+
+                if (!bids.isEmpty()) {
+                    // 최고 입찰자 처리
+                    Bid winningBid = bids.get(0);
+                    winningBid.setStatus(Bid.BidStatus.WON);
+
+                    logger.info("경매 ID {}: 낙찰자 - {}, 낙찰가 - {}원",
+                            auction.getId(),
+                            winningBid.getBidder().getUsername(),
+                            winningBid.getBidAmount());
+
+                    // 나머지 입찰자들은 LOST 처리
+                    for (int i = 1; i < bids.size(); i++) {
+                        bids.get(i).setStatus(Bid.BidStatus.LOST);
+                    }
+                } else {
+                    logger.info("경매 ID {}: 입찰자가 없어 유찰되었습니다.", auction.getId());
+                }
+
+                auctionItemRepository.save(auction);
+
+            } catch (Exception e) {
+                logger.error("경매 ID {} 마감 처리 중 오류 발생", auction.getId(), e);
+            }
+        }
+
+        logger.info("경매 마감 처리 완료: {}건", expiredAuctions.size());
     }
 
 }

@@ -34,4 +34,7 @@ public interface AuctionItemRepository extends JpaRepository<AuctionItem, Long> 
     // 판매자 ID로 경매 상품 찾기
     @Query("SELECT a FROM AuctionItem a WHERE a.seller.id = :sellerId")
     List<AuctionItem> findBySellerId(@Param("sellerId") Long sellerId);
+
+    // 특정 상태이면서 종료 시간이 지난 경매 찾기 (스케줄러용)
+    List<AuctionItem> findByStatusAndEndTimeBefore(AuctionStatus status, LocalDateTime endTime);
 }
